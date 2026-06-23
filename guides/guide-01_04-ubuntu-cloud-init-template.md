@@ -4,7 +4,7 @@
 
 Cloud-Init is the standard way to bootstrap cloud VMs (used by AWS, GCP, Azure). We'll create a template VM that Ansible and Terraform will clone for our K8s nodes.
 
-> [!info] What is Cloud-Init?
+> What is Cloud-Init?
 > Cloud-Init is a package that runs at first boot to configure:
 > - Hostname
 > - Network (static IP, DNS)
@@ -213,8 +213,8 @@ If your router allows to change the DNS server you can change the DNS there to p
 
 ## References
 
-[Cloud-init documentation](https://docs.cloud-init.io/en/latest/)
-[Ubuntu Cloud Images](https://cloud-images.ubuntu.com/)
-[Virt-customize](https://libguestfs.org/virt-customize.1.html)
-[Qemu-guest-agent](https://pve.proxmox.com/wiki/Qemu-guest-agent)
-[Proxmox qm docs](https://pve.proxmox.com/pve-docs/qm.1.html)
+- [Cloud-init documentation](https://docs.cloud-init.io/en/latest/)
+- [Ubuntu Cloud Images](https://cloud-images.ubuntu.com/)
+- [Virt-customize](https://libguestfs.org/virt-customize.1.html)
+- [Qemu-guest-agent](https://pve.proxmox.com/wiki/Qemu-guest-agent)
+- [Proxmox qm docs](https://pve.proxmox.com/pve-docs/qm.1.html)
