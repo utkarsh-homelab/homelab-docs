@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- [ ] Proxmox installed and web UI accessible
+- Proxmox installed and web UI accessible
 - Router admin access (to change DHCP DNS settings)
 
 ## What is Pi-hole?
@@ -383,3 +383,4 @@ We can add more records for any other services you want to access by name. (I'll
 - [Pi-hole Official Documentation](https://docs.pi-hole.net/)
 - [Pi-hole Blocklists](https://firebog.net/)
 - [Proxmox LXC Container Guide](https://pve.proxmox.com/wiki/Linux_Container)
+- [Unbound Official](https://nlnetlabs.nl/projects/unbound/about/)
