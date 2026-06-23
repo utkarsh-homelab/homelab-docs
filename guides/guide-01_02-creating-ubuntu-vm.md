@@ -1,4 +1,4 @@
-# 01-07: Creating First Ubuntu VM in Proxmox
+# 01-02: Creating First Ubuntu VM in Proxmox
 
 ## Prerequisites
 
