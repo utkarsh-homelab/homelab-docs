@@ -5,12 +5,15 @@ Documentation, Architecture, ADRs, Runbooks and Guides
 
 Key decisions documented in `adrs/`:
 
+1. [kubeadm over managed K8s](./adrs/adr-001-kubeadm.md)
+
 ## Docs Structure
 
 ```
 homelab-docs/
-├── README.md                    ← Executive 
-└── guides/                      # Bootstrap guides
+├── README.md             ← Executive 
+├── adrs/                 # Architecture Decision Records
+└── guides/               # Bootstrap guides
 ```
 
 ## Key Design Principles
