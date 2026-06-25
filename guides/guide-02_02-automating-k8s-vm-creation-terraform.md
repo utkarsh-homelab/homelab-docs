@@ -1,4 +1,4 @@
-# 02-01: Automating Kubernetes Cluster VM creation on Proxmox using Terraform 
+# 02-02: Automating Kubernetes Cluster VM creation on Proxmox using Terraform 
 
 ## Why Automate?
 
