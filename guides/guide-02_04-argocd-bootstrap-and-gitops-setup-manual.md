@@ -34,7 +34,7 @@ dependencies:
 
 Values are namespaced under `argo-cd:` because the vendor chart wraps the upstream argo-cd chart as a Helm dependency. No image overrides needed - the upstream default images are used directly.
 
-(We'll setup traefik and cert-manager in upcoming guides, for now the Ingress and certificates won't work.)
+> We'll setup traefik and cert-manager in upcoming guides, for now the Ingress and certificates won't work. Also I have hardcoded my urls in the file, change them according to your setup, I'll create an automation for the bootstrap too where I'll make it a variable so you can change it 😇.
 
 ```yaml
 argo-cd:
