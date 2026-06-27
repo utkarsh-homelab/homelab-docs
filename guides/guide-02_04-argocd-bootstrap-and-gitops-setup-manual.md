@@ -9,7 +9,9 @@
 > I will be deploying other applications through ArgoCD in the future so the main branch will have additional apps that might break if their requirements are not met.
 >
 > for example -
+>
 > e.g. 1: The MetalLB app needs a ip-block outside of the DHCP range of your router, you'll have to configure this according to your network setup.
+>
 > e.g. 2: The CSI-Driver-NFS app needs a nfs-share for persistent storage, I'll be using a nfs-share on proxmox for now, in future I'll use a dedicated NAS, so you'll have to configure this according to your storage setup.
 >
 > I would recommend using the [bootstrap branch](https://github.com/utkarsh-homelab/homelab-gitops/tree/bootstrap) instead, since it only has the files required for the bootstrap setup, i.e. the app-of-apps `root` application, `argocd` application and the `argocd-install.yaml` file.
@@ -93,7 +95,7 @@ Generate the bootstrap YAML from the umbrella chart with our values:
 ```bash
 cd ~/Projects/Homelab/homelab-infra-charts
 
-# Add upstream Helm repos
+# Add upstream Helm repo
 helm repo add argo https://argoproj.github.io/argo-helm
 
 # Download sub-chart dependencies so helm template can render them
@@ -242,7 +244,7 @@ kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath="{.data.pas
 kubectl port-forward svc/argocd-server -n argocd 8080:443 
 ```
 
-> The Ingress becomes active after MetalLB and Traefik are synced (sync waves -1 and 0 complete). I'll create a guide for deploying them next :)
+> The Ingress becomes active after MetalLB and Traefik are synced (sync waves -1 and 0 complete). I'll create a guide for deploying them later 😊.
 
 ## Sync Wave Strategy
 
@@ -253,11 +255,8 @@ kubectl port-forward svc/argocd-server -n argocd 8080:443
 | 0 | traefik, cert-manager | Ingress + TLS |
 | 1 | kube-prometheus-stack, csi-driver-nfs | Monitoring + storage |
 
-## Next Steps
-
-Continue to:
-- [MetalLB]()
-- [Traefik + cert-manager]()
+> [!NOTE]
+> I'll be creating guides for other components too. You can find them in this repo once they are created.
 
 ## References
 

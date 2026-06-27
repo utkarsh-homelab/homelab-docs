@@ -4,7 +4,9 @@
 > I will be deploying other applications through ArgoCD in the future so the main branch will have additional apps that might break if their requirements are not met.
 >
 > for example -
+>
 > e.g. 1: The MetalLB app needs a ip-block outside of the DHCP range of your router, you'll have to configure this according to your network setup.
+>
 > e.g. 2: The CSI-Driver-NFS app needs a nfs-share for persistent storage, I'll be using a nfs-share on proxmox for now, in future I'll use a dedicated NAS, so you'll have to configure this according to your storage setup.
 >
 > I would recommend using the [bootstrap branch](https://github.com/utkarsh-homelab/homelab-gitops/tree/bootstrap) instead, since it only has the files required for the bootstrap setup, i.e. the app-of-apps `root` application, `argocd` application and the `argocd-install.yaml` file.
