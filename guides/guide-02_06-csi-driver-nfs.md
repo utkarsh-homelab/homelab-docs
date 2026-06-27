@@ -13,7 +13,7 @@
 | NFS Export | `/var/nfs/kubernetes` |
 | CSI Driver | csi-driver-nfs v4.13.3 |
 | StorageClass | `nfs-csi` |
-| Reclaim Policy | Retain |
+| Reclaim Policy | Delete |
 
 ## The CSI Driver NFS Umbrella Chart
 
