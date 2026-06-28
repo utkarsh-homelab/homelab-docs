@@ -139,7 +139,7 @@ kubectl get pods -n metallb-system
 ▶ metallb-controller-7b8f6f8f6f-abcde               1/1     Running   0          1m
 ▶ metallb-speaker-5b87dfd986-qxc7k                  1/1     Running   0          1m
 
-kubectl get ippools -n metallb-system
+kubectl get ipaddresspools -n metallb-system
 ▶ NAME           AGE
 ▶ default-pool   1m
 
