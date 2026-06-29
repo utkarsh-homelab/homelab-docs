@@ -65,7 +65,7 @@ argo-cd:
       hosts:
         - argocd.uttutu.xyz
       tls:
-        - secretName: argocd-tls
+        - secretName: wildcard-uttutu-tls
           hosts:
             - argocd.uttutu.xyz
   dex:
@@ -83,6 +83,11 @@ argo-cd:
   notifications:
     enabled: false
 ```
+
+> [!NOTE]
+> I ended up setting up a wildcard certificate later and that is reflected in the main branch.
+>
+> So I'm updating it here at well, earlier we were using `argocd-tls` for argocd as a placeholder before I had deployed argocd.
 
 ## Step 2: [homelab-gitops](https://github.com/utkarsh-homelab/homelab-gitops) - Bootstrap + App of Apps setup
 
