@@ -62,12 +62,8 @@ argo-cd:
       ingressClassName: traefik
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt-prod
-      hosts:
-        - argocd.uttutu.xyz
-      tls:
-        - secretName: wildcard-uttutu-tls
-          hosts:
-            - argocd.uttutu.xyz
+      hostname: argocd.uttutu.xyz
+      tls: true
   dex:
     enabled: false
   redis-ha:

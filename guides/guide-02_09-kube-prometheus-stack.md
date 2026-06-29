@@ -99,9 +99,8 @@ kube-prometheus-stack:
         - alertmanager.uttutu.xyz
       paths:
         - /
-      tls:
-        - secretName: wildcard-uttutu-tls
-          hosts:
+      tls:                          
+        - hosts:                    
             - alertmanager.uttutu.xyz
 
   grafana:
@@ -116,10 +115,9 @@ kube-prometheus-stack:
       hosts:
         - grafana.uttutu.xyz
       path: /
-      tls:
-        - secretName: wildcard-uttutu-tls
-          hosts:
-            - grafana.uttutu.xyz
+      tls:                          
+        - hosts:                    
+            - alertmanager.uttutu.xyz
     persistence:
       enabled: true
       type: sts
@@ -211,10 +209,9 @@ kube-prometheus-stack:
         - prometheus.uttutu.xyz
       paths:
         - /
-      tls:
-        - secretName: wildcard-uttutu-tls
-          hosts:
-            - prometheus.uttutu.xyz
+      tls:                          
+        - hosts:                    
+            - alertmanager.uttutu.xyz
 
   prometheusOperator:
     admissionWebhooks:

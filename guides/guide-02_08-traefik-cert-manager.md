@@ -231,8 +231,6 @@ traefik:
       matchRule: Host(`traefik.uttutu.xyz`) && (PathPrefix(`/dashboard`) || PathPrefix(`/api`))
       entryPoints:
         - websecure
-      tls:
-        secretName: wildcard-uttutu-tls
 
   ports:
     web:
@@ -266,6 +264,11 @@ traefik:
       enabled: true
       publishedService:
         enabled: true
+
+  tlsStore:
+    default:
+      defaultCertificate:
+        secretName: wildcard-uttutu-tls
 
   metrics:
     prometheus:
