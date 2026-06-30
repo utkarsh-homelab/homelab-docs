@@ -16,6 +16,9 @@
 >
 > I would recommend using the [bootstrap branch](https://github.com/utkarsh-homelab/homelab-gitops/tree/bootstrap) instead, since it only has the files required for the bootstrap setup, i.e. the app-of-apps `root` application, `argocd` application and the `argocd-install.yaml` file.
 
+> [!WARNING]
+> The `main` branch for the `homelab-gitops` repo has been updated. The `apps` folder has been migrated to `infra-apps` and the `root` app has been renamed to `infra-root`. Make sure you use the `bootstap` branch for manual setup, the code there matches the manual setup, I'll be updating the [automated guide](./guide-02_05-automating-argocd-bootstrap.md) to use the `main` branch.
+
 ## GitOps Setup
 
 1. [utkarsh-homelab/homelab-infra-charts](https://github.com/utkarsh-homelab/homelab-infra-charts): All vendored umbrella charts.

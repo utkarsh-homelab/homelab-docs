@@ -9,7 +9,10 @@
 >
 > e.g. 2: The CSI-Driver-NFS app needs a nfs-share for persistent storage, I'll be using a nfs-share on proxmox for now, in future I'll use a dedicated NAS, so you'll have to configure this according to your storage setup.
 >
-> I would recommend using the [bootstrap branch](https://github.com/utkarsh-homelab/homelab-gitops/tree/bootstrap) instead, since it only has the files required for the bootstrap setup, i.e. the app-of-apps `root` application, `argocd` application and the `argocd-install.yaml` file.
+> I would recommend using the [bootstrap branch](https://github.com/utkarsh-homelab/homelab-gitops/tree/bootstrap) instead, since it only has the files required for the bootstrap setup, i.e. the app-of-apps `infra-root` application, `argocd` application and the `argocd-install.yaml` file.
+
+> [!WARNING]
+> The `main` branch for the `homelab-gitops` repo has been updated. The `apps` folder has been migrated to `infra-apps` and the `root` app has been renamed to `infra-root`. I have be updated this guide and the `homelab-iac` repo code to use the updated setup.
 
 ## Overview
 
@@ -49,7 +52,7 @@ This automation mirrors the manual steps from [previous guide](./guide-02_04-arg
 
 ### For `--tags root-app`
 
-- **homelab-gitops repo** must exist on GitHub with the `apps/root.yaml` file (I'll keep the repo public so you don't have to worry about this 😇)
+- **homelab-gitops repo** must exist on GitHub with the `infra-apps/infra-root.yaml` file (I'll keep the repo public so you don't have to worry about this 😇)
 - The control-plane node must have **internet access** to download the raw manifest from GitHub
 
 ---
@@ -204,7 +207,11 @@ kubectl get secret argocd-initial-admin-secret \
 
 ### Step 6 (Optional): Apply Root App of Apps
 
-See [Section 7](#7-the-root-app-of-apps).
+```bash
+ansible-playbook playbooks/argocd.yaml --tags root-app
+```
+
+More details for the Root App of Apps is documented below. 
 
 ---
 
@@ -246,17 +253,17 @@ The playbook uses Ansible tags. You can run individual steps:
 
 ### What It Is
 
-The root App of Apps is an ArgoCD `Application` resource that points to the `apps/` directory of the `homelab-gitops` repo. When applied, ArgoCD reads the `apps/` directory and creates one `Application` resource per file. Each of those Applications syncs its respective Helm chart from the `homelab-infra-charts` repo.
+The root App of Apps is an ArgoCD `Application` resource that points to the `infra-apps/` directory of the `homelab-gitops` repo. When applied, ArgoCD reads the `infra-apps/` directory and creates one `Application` resource per file. Each of those Applications syncs its respective Helm chart from the `homelab-infra-charts` repo.
 
 This is the foundation of the GitOps self-management pattern:
 
 ```
-root.yaml ──▶ discovers apps/ directory
+root.yaml ──▶ discovers infra-apps/ directory
   │
-  ├── apps/argocd.yaml         ──▶ self-manages ArgoCD via homelab-infra-charts
-  ├── apps/metallb.yaml        ──▶ manages MetalLB (future)
-  ├── apps/traefik.yaml        ──▶ manages Traefik (future)
-  ├── apps/cert-manager.yaml   ──▶ manages cert-manager (future)
+  ├── infra-apps/argocd.yaml         ──▶ self-manages ArgoCD via homelab-infra-charts
+  ├── infra-apps/metallb.yaml        ──▶ manages MetalLB (future)
+  ├── infra-apps/traefik.yaml        ──▶ manages Traefik (future)
+  ├── infra-apps/cert-manager.yaml   ──▶ manages cert-manager (future)
   └── ... more apps
 ```
 
@@ -272,7 +279,7 @@ Apply the root App of Apps **after**:
 ansible-playbook playbooks/argocd.yaml --tags root-app
 ```
 
-This downloads `apps/root.yaml` from the `homelab-gitops` repo and applies it with `kubectl apply -f -`.
+This downloads `infra-apps/infra-root.yaml` from the `homelab-gitops` repo and applies it with `kubectl apply -f -`.
 
 The repo URL is configurable via the `argocd_gitops_repo` variable in `group_vars/all.yaml`:
 
@@ -283,10 +290,10 @@ argocd_gitops_repo: "https://github.com/utkarsh-homelab/homelab-gitops"
 ### What Happens After
 
 1. ArgoCD syncs the root Application
-2. Root discovers the `apps/` directory in the repo
-3. For each `.yaml` file in `apps/`, root creates an Application resource
+2. Root discovers the `infra-apps/` directory in the repo
+3. For each `.yaml` file in `infra-apps/`, root creates an Application resource
 4. Each Application syncs its Helm chart from `homelab-infra-charts`
-5. ArgoCD manages itself via `apps/argocd.yaml`
+5. ArgoCD manages itself via `infra-apps/argocd.yaml`
 
 > From this point, ArgoCD is self-managing. Changes to any component should be made by updating the appropriate chart in `homelab-infra-charts` or the Application manifest in `homelab-gitops`, not by modifying the cluster directly.
 
@@ -337,7 +344,7 @@ ansible-playbook playbooks/argocd.yaml --tags regenerate
 argocd_gitops_repo: "https://github.com/your-org/your-gitops-repo"
 ```
 
-This affects the root-app task that downloads `apps/root.yaml` from the repo.
+This affects the root-app task that downloads `infra-apps/infra-root.yaml` from the repo.
 
 ### Adding Pre-Bootstrap Annotations
 
@@ -379,11 +386,11 @@ shell: |
 
 ### Root app apply fails: "not found"
 
-**Cause:** The `homelab-gitops` repo doesn't exist yet, or the `apps/root.yaml` file hasn't been committed.
+**Cause:** The `homelab-gitops` repo doesn't exist yet, or the `infra-apps/infra-root.yaml` file hasn't been committed.
 
 **Fix:** The root-app task is tagged so it's skipped by default. Only run it when the repo is ready. If it fails:
 1. Verify the repo exists: `curl -sI {{ argocd_gitops_repo }}`
-2. Verify the root.yaml path: `curl -sI {{ argocd_gitops_repo }}/raw/main/apps/root.yaml`
+2. Verify the infra-root.yaml path: `curl -sI {{ argocd_gitops_repo }}/raw/main/infra-apps/infra-root.yaml`
 3. Check `argocd_gitops_repo` in `group_vars/all.yaml`
 
 ### ArgoCD Ingress shows 404/default backend
