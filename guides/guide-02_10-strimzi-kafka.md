@@ -480,10 +480,10 @@ This is a standalone chart with no external dependencies, so no `helm dependency
 
 ### GitOps Application
 
-Create `infra-apps/kafka-cluster.yaml` in the [homelab-gitops repo](https://github.com/utkarsh-homelab/homelab-gitops):
+Create `apps/kafka-cluster.yaml` in the [homelab-gitops repo](https://github.com/utkarsh-homelab/homelab-gitops):
 
 ```yaml
-# homelab-gitops/infra-apps/kafka-cluster.yaml
+# homelab-gitops/apps/kafka-cluster.yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
