@@ -22,6 +22,25 @@
 
 Both apps share the `music` folder on the `media-share` PVC. slskd downloads music there, Navidrome serves it.
 
+> [!WARNING]
+> I ended up not using Soulseek(slskd) due to performance issues on my nodes.
+> But I tested it out and this setup works as expected.
+> For now I'm using slskd in a Docker container in my personal machine, here's the docker command to run it:
+
+```bash
+docker run -d \
+  --name slskd \
+  -p 5030:5030 \
+  -p 5031:5031 \
+  -p 50300:50300 \
+  -e SLSKD_REMOTE_CONFIGURATION=true \
+  -v /path/to/your/music:/app/music \
+  -v /path/to/your/downloads:/app/downloads \
+  -v /path/to/appdata:/app \
+  --user 1000:1000 \
+  slskd/slskd:latest
+``` 
+
 ## Shared Media Storage
 
 ### Update media subdirectories
