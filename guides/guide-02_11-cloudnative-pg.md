@@ -459,6 +459,20 @@ kubectl get crd | grep cnpg
 # ...
 ```
 
+### Password Incorrect
+
+The rolling update regenerated the secret with a new random password
+
+You need to set the password in PostgreSQL to match the new secret:
+```bash
+kubectl exec -n postgres homelab-postgres-1 -c postgres -- \
+  psql -U postgres -c "ALTER USER postgres WITH PASSWORD 'SUPER_SECURE_PASSWORD'"
+```
+Then verify:
+```bash
+PGPASSWORD=SUPER_SECURE_PASSWORD psql -h 192.168.0.204 -p 5432 -U postgres -c "SELECT 1"
+```
+
 ---
 
 ## Summary
