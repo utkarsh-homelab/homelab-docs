@@ -18,6 +18,7 @@
 | Storage | Local-path provisioner (5Gi) |
 | External Access | LoadBalancer on port 5432 via MetalLB |
 | Namespace | `postgres` |
+| Superuser Access | Disabled (use `app` user or `kubectl exec` for admin) |
 
 > [!NOTE]
 > CloudNativePG manages PostgreSQL workloads on Kubernetes. Unlike Strimzi, CNPG's Helm chart bundles CRDs — no separate manifest download needed.
@@ -125,6 +126,8 @@ helm dependency build
 
 A single-node PostgreSQL 16 instance managed by CNPG. The `Cluster` CR tells CNPG what PostgreSQL version, storage, and configuration to use.
 
+Superuser access is **disabled** by default. Use the `app` user for applications, or `kubectl exec` for admin tasks (peer authentication, no password needed).
+
 ### charts/postgres-cluster/Chart.yaml
 
 ```yaml
@@ -179,10 +182,6 @@ postgres:
   monitoring:
     enablePodMonitor: false
 
-  superuserSecret:
-    name: postgres-superuser
-    username: postgres
-
   service:
     type: LoadBalancer
     loadBalancerIP: 192.168.0.204
@@ -204,6 +203,8 @@ spec:
 
   instances: {{ .Values.postgres.instances }}
 
+  enableSuperuserAccess: false
+
   postgresUID: 26
   postgresGID: 26
 
@@ -224,22 +225,6 @@ spec:
   postgresql:
     parameters:
       {{- toYaml .Values.postgres.parameters | nindent 6 }}
-```
-
-### templates/secret.yaml
-
-```yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: {{ .Values.postgres.superuserSecret.name }}
-  namespace: {{ .Values.postgres.namespace }}
-  labels:
-    cnpg.io/cluster: {{ .Values.postgres.name }}
-type: kubernetes.io/basic-auth
-stringData:
-  username: {{ .Values.postgres.superuserSecret.username | default "postgres" | quote }}
-  password: {{ .Values.postgres.superuserSecret.password | default (randAlphaNum 32) | quote }}
 ```
 
 ### templates/service.yaml
@@ -371,38 +356,147 @@ kubectl get svc -n postgres
 # homelab-postgres-external LoadBalancer   10.x.x.x      192.168.0.204  5432:xxxxx/TCP   5m
 ```
 
+### Check app user secret
+
+CNPG auto-creates the `app` user and stores credentials in a secret:
+
+```bash
+kubectl get secret homelab-postgres-app -n postgres -o jsonpath='{.data}' | \
+  python3 -c "import sys, json, base64; d=json.load(sys.stdin); print('\n'.join(f'{k}: {base64.b64decode(v).decode()}' for k,v in d.items()))"
+```
+
 ---
 
 ## Connect to PostgreSQL
 
-### Get the superuser password
+### Connect via LoadBalancer (app user)
 
 ```bash
-kubectl get secret postgres-superuser -n postgres -o jsonpath='{.data.password}' | base64 -d
+# Get the app user password
+kubectl get secret homelab-postgres-app -n postgres -o jsonpath='{.data.password}' | base64 -d
+
+# Connect with pgcli
+pgcli -h 192.168.0.204 -p 5432 -U app -d app
 ```
 
-### Connect via port-forward (internal)
+### Connect via port-forward (app user)
 
 ```bash
 kubectl port-forward -n postgres svc/homelab-postgres 5432:5432
 
 # In another terminal:
-psql -h localhost -p 5432 -U postgres
+pgcli -h localhost -p 5432 -U app -d app
 ```
 
-### Connect via LoadBalancer (external)
+### Admin access via kubectl exec (peer auth, no password)
 
 ```bash
-# From your laptop (if psql is installed):
-psql -h 192.168.0.204 -p 5432 -U postgres
+kubectl exec -n postgres homelab-postgres-1 -c postgres -- psql -U postgres
 ```
 
-### Connect from a pod in the cluster
+---
+
+## Creating New Databases and Roles
+
+CNPG provides declarative CRDs for managing databases and roles.
+
+### Create the Role Secret
+
+First, create the secret that will store the role credentials:
 
 ```bash
-kubectl run pg-client --rm -it --restart=Never \
-  --image=ghcr.io/cloudnative-pg/postgresql:16 \
-  -- psql -h homelab-postgres-external.postgres.svc -U postgres
+kubectl create secret generic myapp-role-secret -n postgres \
+  --from-literal=username=myapp \
+  --from-literal=password='secure-password-here'
+```
+
+Or as a YAML manifest:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: myapp-role-secret
+  namespace: postgres
+type: kubernetes.io/basic-auth
+stringData:
+  username: myapp
+  password: "secure-password-here"
+```
+
+### Create a Role with DatabaseRole CRD
+
+```yaml
+apiVersion: postgresql.cnpg.io/v1
+kind: DatabaseRole
+metadata:
+  name: myapp-role
+  namespace: postgres
+spec:
+  cluster:
+    name: homelab-postgres
+  name: myapp
+  login: true
+  superuser: false
+  createdb: true
+  passwordSecret:
+    name: myapp-role-secret
+```
+
+### Create a Database with Database CRD
+
+```yaml
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: myapp-db
+  namespace: postgres
+spec:
+  name: myapp
+  owner: myapp
+  cluster:
+    name: homelab-postgres
+  extensions:
+    - name: pg_trgm
+      ensure: present
+```
+
+### Apply Everything
+
+```bash
+# Create the secret
+kubectl create secret generic myapp-role-secret -n postgres \
+  --from-literal=username=myapp \
+  --from-literal=password='secure-password-here'
+
+# Apply the DatabaseRole and Database CRDs
+kubectl apply -f myapp-role.yaml
+kubectl apply -f myapp-db.yaml
+```
+
+### Connect to the New Database
+
+```bash
+# Get the role password
+kubectl get secret myapp-role-secret -n postgres -o jsonpath='{.data.password}' | base64 -d
+
+# Connect
+pgcli -h 192.168.0.204 -p 5432 -U myapp -d myapp
+```
+
+### Grant Additional Permissions (via kubectl exec)
+
+```bash
+kubectl exec -n postgres homelab-postgres-1 -c postgres -- psql -U postgres
+
+# Grant schema permissions
+GRANT ALL ON SCHEMA public TO myapp;
+GRANT ALL PRIVILEGES ON DATABASE myapp TO myapp;
+
+# Grant read-only access to another role
+GRANT CONNECT ON DATABASE myapp TO readonly_user;
+GRANT USAGE ON SCHEMA public TO readonly_user;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO readonly_user;
 ```
 
 ---
@@ -422,9 +516,13 @@ kubectl edit cluster homelab-postgres -n postgres
 # Restart PostgreSQL
 kubectl cnpg restart instance homelab-postgres-1 -n postgres
 
-# Check WAL status
+# List all databases
 kubectl exec -n postgres homelab-postgres-1 -c postgres -- \
-  psql -U postgres -c "SELECT * FROM pg_stat_replication;"
+  psql -U postgres -c "\l"
+
+# List all roles
+kubectl exec -n postgres homelab-postgres-1 -c postgres -- \
+  psql -U postgres -c "\du"
 ```
 
 ---
@@ -455,22 +553,19 @@ Check if CRDs are installed:
 ```bash
 kubectl get crd | grep cnpg
 # clusters.postgresql.cnpg.io
+# databases.postgresql.cnpg.io
+# databaseroles.postgresql.cnpg.io
 # backups.postgresql.cnpg.io
 # ...
 ```
 
-### Password Incorrect
+### Connection refused from outside
 
-The rolling update regenerated the secret with a new random password
+Check if the LoadBalancer is assigned:
 
-You need to set the password in PostgreSQL to match the new secret:
 ```bash
-kubectl exec -n postgres homelab-postgres-1 -c postgres -- \
-  psql -U postgres -c "ALTER USER postgres WITH PASSWORD 'SUPER_SECURE_PASSWORD'"
-```
-Then verify:
-```bash
-PGPASSWORD=SUPER_SECURE_PASSWORD psql -h 192.168.0.204 -p 5432 -U postgres -c "SELECT 1"
+kubectl get svc -n postgres homelab-postgres-external
+# EXTERNAL-IP should be 192.168.0.204
 ```
 
 ---
@@ -482,10 +577,14 @@ PGPASSWORD=SUPER_SECURE_PASSWORD psql -h 192.168.0.204 -p 5432 -U postgres -c "S
 | CNPG Operator | `cnpg-system` | Cluster-scoped |
 | PostgreSQL | `postgres` | Internal: `homelab-postgres-rw.postgres.svc:5432` |
 | | | External: `192.168.0.204:5432` |
+| App User | `postgres` | `homelab-postgres-app` secret |
+| Admin Access | `postgres` | `kubectl exec` (peer auth, no password) |
 
 ## References
 
 - [CloudNativePG Documentation](https://cloudnative-pg.io/documentation/)
 - [CNPG Helm Charts](https://github.com/cloudnative-pg/charts)
 - [CNPG CRD API Reference](https://cloudnative-pg.io/documentation/latest/api_reference/)
+- [Declarative Database Management](https://cloudnative-pg.io/documentation/latest/declarative_database_management/)
+- [Declarative Role Management](https://cloudnative-pg.io/documentation/latest/declarative_role_management/)
 - [PostgreSQL on CNPG](https://cloudnative-pg.io/documentation/latest/postgresql/)
