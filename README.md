@@ -11,9 +11,15 @@ Key decisions documented in `adrs/`:
 
 ```
 homelab-docs/
-├── README.md             ← Executive 
+├── README.md             ← Executive overview
 ├── adrs/                 # Architecture Decision Records
-└── guides/               # Bootstrap guides
+├── architecture/         # Architecture diagrams
+├── guides/               # Bootstrap & deployment guides
+│   ├── Phase 1 — Proxmox & Base Services (guide-01_*)
+│   ├── Phase 2 — Kubernetes & Infrastructure (guide-02_*)
+│   └── Phase 3 — Self-Hosted Applications (guide-03_*)
+├── hardware/             # Hardware specifications
+└── operations/           # Operations runbooks
 ```
 
 ## Key Design Principles
